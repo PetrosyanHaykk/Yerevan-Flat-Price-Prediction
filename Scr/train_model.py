@@ -25,13 +25,16 @@ def set_seed(seed=42):
 
 set_seed()
 
-# Load dataset
+# Get current working directory
 current_path = os.getcwd()
-project_root = os.path.dirname(current_path)
+# Go back to the project root (3 levels up from Scr/GUI)
+project_root = os.path.abspath(os.path.join(current_path, "..", ".."))
 print("PROJECT ROOT:", project_root)
-
-csv_path = os.path.join(project_root, 'Yerevan-Flat-Price-Prediction', 'Data', 'processed', 'processed_df.csv')
+# Build the path to the CSV file
+csv_path = os.path.join(project_root, "Data", "processed", "processed_df.csv")
+# Load dataset
 df = pd.read_csv(csv_path)
+print(f"Data loaded from: {csv_path}")
 
 
 
