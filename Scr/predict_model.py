@@ -61,17 +61,17 @@ def predict_price(input_dict):
 # Example usage
 if __name__ == "__main__":
     example_input = {
-        "Number of Floors": 9,
-        "Total Area": 42,
+        "Number of Floors": 10,
+        "Total Area": 50,
         "Number of Rooms": 2,
         "Number of Bathrooms": 1,
-        "Ceiling Height": 2.8,
-        "Floor": 9,
+        "Ceiling Height": 3,
+        "Floor": 8,
         "Building Type": "Panel",
         "Balcony": "Closed Balcony",
         "Furniture": "Available",
         "Renovation": "Old Renovation",
-        "District": "Nor Norq",
+        "District": "Kentron",
         "New Building": "No",
         "Elevator": "Available"
     }
