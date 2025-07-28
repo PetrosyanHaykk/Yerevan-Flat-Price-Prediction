@@ -25,16 +25,20 @@ def set_seed(seed=42):
 
 set_seed()
 
+import os
+import pandas as pd
+
 # Get current working directory
 current_path = os.getcwd()
-# Go back to the project root (3 levels up from Scr/GUI)
-project_root = os.path.abspath(os.path.join(current_path, "..", ".."))
-print("PROJECT ROOT:", project_root)
-# Build the path to the CSV file
-csv_path = os.path.join(project_root, "Data", "processed", "processed_df.csv")
+print("CURRENT PATH:", current_path)
+
+# Build the path to the CSV file directly from current_path
+csv_path = os.path.join(current_path, "Data", "processed", "processed_df.csv")
+
 # Load dataset
 df = pd.read_csv(csv_path)
 print(f"Data loaded from: {csv_path}")
+
 
 
 
@@ -85,23 +89,23 @@ model = Sequential([
     Dense(512, kernel_regularizer=tf.keras.regularizers.l2(1e-4)),
     BatchNormalization(),
     PReLU(),
-    Dropout(0.2),
+    Dropout(0.4),
 
     Dense(256, kernel_regularizer=tf.keras.regularizers.l2(1e-4)),
     BatchNormalization(),
     PReLU(),
-    Dropout(0.2),
+    Dropout(0.3),
+
+    Dense(256, kernel_regularizer=tf.keras.regularizers.l2(1e-4)),
+    BatchNormalization(),
+    PReLU(),
+    Dropout(0.3),
 
     Dense(128, kernel_regularizer=tf.keras.regularizers.l2(1e-4)),
     BatchNormalization(),
     PReLU(),
     Dropout(0.1),
-
-    Dense(64, kernel_regularizer=tf.keras.regularizers.l2(1e-4)),
-    BatchNormalization(),
-    PReLU(),
-    Dropout(0.1),
-
+    
     Dense(32, kernel_regularizer=tf.keras.regularizers.l2(1e-4)),
     BatchNormalization(),
     PReLU(),
@@ -116,7 +120,7 @@ model.compile(
 )
 
 # Callbacks
-early_stop = EarlyStopping(monitor='val_loss', patience=20, restore_best_weights=True, min_delta=1e-3)
+early_stop = EarlyStopping(monitor='val_loss', patience=15, restore_best_weights=True, min_delta=1e-3)
 
 class LRTracker(Callback):
     def on_epoch_end(self, epoch, logs=None):
@@ -128,7 +132,7 @@ history = model.fit(
     X_train_scaled, y_train,
     validation_split=0.15,
     epochs=100,
-    batch_size=32,
+    batch_size=16,
     callbacks=[early_stop, LRTracker()],
     verbose=1
 )
