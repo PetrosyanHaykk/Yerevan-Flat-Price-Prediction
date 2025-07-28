@@ -1,3 +1,4 @@
+# Import necessary libraries
 import os
 import random
 import joblib
@@ -25,22 +26,14 @@ def set_seed(seed=42):
 
 set_seed()
 
-import os
-import pandas as pd
-
-# Get current working directory
+# Load dataset
 current_path = os.getcwd()
 print("CURRENT PATH:", current_path)
 
-# Build the path to the CSV file directly from current_path
 csv_path = os.path.join(current_path, "Data", "processed", "processed_df.csv")
 
-# Load dataset
 df = pd.read_csv(csv_path)
 print(f"Data loaded from: {csv_path}")
-
-
-
 
 # One-Hot Encoding of categorical columns
 columns_to_onehot = ["Building Type", "Balcony", "Furniture", "Renovation", "District"]
@@ -51,24 +44,24 @@ df = pd.get_dummies(df, columns=columns_to_binary, drop_first=True)
 
 # Shuffle and split
 df_shuffled = shuffle(df, random_state=42).reset_index(drop=True)
-X = df_shuffled.drop("Price", axis=1)  # թող DataFrame լինի
+X = df_shuffled.drop("Price", axis=1)
 y = df_shuffled["Price"].values
-y_log = np.log1p(y)
+y_log = np.log1p(y)  # log transform of target
 
 X_train, X_test, y_train, y_test = train_test_split(X, y_log, test_size=0.15, random_state=42)
 
 # Scale numeric features
-X_train_scaled = X_train.copy()
-X_test_scaled = X_test.copy()
-
 numeric_columns = ['Number of Floors', 'Total Area', 'Number of Rooms',
                    'Number of Bathrooms', 'Ceiling Height', 'Floor']
 
 scaler = StandardScaler()
+X_train_scaled = X_train.copy()
+X_test_scaled = X_test.copy()
+
 X_train_scaled[numeric_columns] = scaler.fit_transform(X_train[numeric_columns])
 X_test_scaled[numeric_columns] = scaler.transform(X_test[numeric_columns])
 
-# Custom metric
+# Custom metric for real MAE
 def real_mae(y_true, y_pred):
     y_true_exp = tf.math.expm1(y_true)
     y_pred_exp = tf.math.expm1(y_pred)
@@ -86,7 +79,7 @@ lr_schedule = tf.keras.optimizers.schedules.CosineDecayRestarts(
 # Build Model
 model = Sequential([
     Input(shape=(X_train_scaled.shape[1],)),
-    Dense(512, kernel_regularizer=tf.keras.regularizers.l2(1e-4)),
+    Dense(518, kernel_regularizer=tf.keras.regularizers.l2(1e-4)),
     BatchNormalization(),
     PReLU(),
     Dropout(0.4),
@@ -146,11 +139,11 @@ mae = mean_absolute_error(y_test_real, y_pred)
 rmse = np.sqrt(mean_squared_error(y_test_real, y_pred))
 r2 = r2_score(y_test_real, y_pred)
 
-print(f"✅ Test MAE: {mae:.2f}")
-print(f"✅ Test RMSE: {rmse:.2f}")
-print(f"✅ Test R² Score: {r2:.3f}")
+print(f"Test MAE: {mae:.2f}")
+print(f"Test RMSE: {rmse:.2f}")
+print(f"Test R² Score: {r2:.3f}")
 
-# Plot MAE
+# Plot MAE During Training
 plt.figure(figsize=(8, 5))
 plt.plot(history.history['real_mae'], label='Train MAE (Real Prices)', linewidth=2)
 plt.plot(history.history['val_real_mae'], label='Val MAE (Real Prices)', linewidth=2)
@@ -161,10 +154,25 @@ plt.legend()
 plt.grid(True, linestyle='--', alpha=0.7)
 plt.show()
 
-# Save Model
+# Plot Real vs Predicted Prices
+plt.figure(figsize=(8, 6))
+plt.scatter(y_test_real, y_pred, color="purple", alpha=0.6, edgecolor="k")
+plt.plot(
+    [y_test_real.min(), y_test_real.max()],
+    [y_test_real.min(), y_test_real.max()],
+    color="red", linestyle="--", linewidth=2
+)
+plt.title("Real vs Predicted Prices", fontsize=16, fontweight='bold')
+plt.xlabel("Real Price (USD)", fontsize=12)
+plt.ylabel("Predicted Price (USD)", fontsize=12)
+plt.grid(True, linestyle='--', alpha=0.5)
+plt.tight_layout()
+plt.show()
+
+# Save Model and Preprocessing Artifacts
 os.makedirs("models", exist_ok=True)
 model.save("models/nn_model.keras", include_optimizer=False)
 joblib.dump(scaler, "models/scaler.pkl")
 joblib.dump(list(df_shuffled.drop("Price", axis=1).columns), "models/model_columns.pkl")
 
-print("✅ Model, scaler, and feature columns saved in 'models/' folder.")
+print("Model, scaler, and feature columns saved in 'models/' folder.")

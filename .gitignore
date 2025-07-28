@@ -17,8 +17,3 @@ venv/
 
 # VSCode settings
 .vscode/
-
-
-# Data files (optional, keep Data folder tracked)
-# Uncomment next line if you want to ignore all CSVs
-# *.csv
