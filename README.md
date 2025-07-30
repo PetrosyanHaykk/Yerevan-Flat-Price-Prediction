@@ -71,3 +71,23 @@ I developed this project using machine learning techniques (Neural Networks with
 
    bash
    pip install notebook jupyterlab
+
+
+**Important: TensorFlow and Python Version Compatibility:**
+
+    TensorFlow is very sensitive to the Python version you use.
+    If you install TensorFlow on a Python version that is not supported, you will get errors like:
+
+    ERROR: Could not find a version that satisfies the requirement tensorflow
+
+    To avoid these issues, use one of the compatible Python versions for TensorFlow:
+    Recommended: Python 3.9, 3.10, or 3.11 (fully supported by TensorFlow 2.16+).
+    Older versions of TensorFlow also work with Python 3.8 (but not newer than 3.11).
+
+    If you have Python 3.12 or newer, install Python 3.11 instead:
+
+    then 
+
+    py -3.11 -m venv venv
+    ./venv/Scripts/activate
+    pip install -r requirements.txt
