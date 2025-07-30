@@ -1,26 +1,29 @@
 # Import necessary libraries
+import os
 import pandas as pd
 import numpy as np
-import os
 import joblib
 import math
 import tensorflow as tf
 from keras.models import load_model
 
-# Custom metric used during training (must be redefined for loading the model)
+# Custom metric
 def real_mae(y_true, y_pred):
     y_true_exp = tf.math.expm1(y_true)
     y_pred_exp = tf.math.expm1(y_pred)
     return tf.reduce_mean(tf.abs(y_true_exp - y_pred_exp))
 
-# Paths to the saved model and preprocessing objects
+# Get absolute path of this script
+current_path = os.path.abspath(__file__)
 
-current_path = os.getcwd()
-print("CURRENT PATH:", current_path)
+# Go up the directory tree until we reach "Yerevan-Flat-Price-Prediction"
+project_root = current_path[:current_path.find("Yerevan-Flat-Price-Prediction") + len("Yerevan-Flat-Price-Prediction")]
 
-MODEL_PATH = os.path.join(current_path, "models", "nn_model.keras")
-SCALER_PATH = os.path.join(current_path, "models", "scaler.pkl")
-COLUMNS_PATH = os.path.join(current_path, "models", "model_columns.pkl")
+# Paths relative to project root
+MODEL_PATH = os.path.join(project_root, "models", "nn_model.keras")
+SCALER_PATH = os.path.join(project_root, "models", "scaler.pkl")
+COLUMNS_PATH = os.path.join(project_root, "models", "model_columns.pkl")
+
 
 # Load trained model and preprocessing tools
 model = load_model(MODEL_PATH, custom_objects={"real_mae": real_mae})
