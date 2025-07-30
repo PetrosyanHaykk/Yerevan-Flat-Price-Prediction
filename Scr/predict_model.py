@@ -1,6 +1,7 @@
 # Import necessary libraries
 import pandas as pd
 import numpy as np
+import os
 import joblib
 import math
 import tensorflow as tf
@@ -13,9 +14,13 @@ def real_mae(y_true, y_pred):
     return tf.reduce_mean(tf.abs(y_true_exp - y_pred_exp))
 
 # Paths to the saved model and preprocessing objects
-MODEL_PATH = "models/nn_model.keras"
-SCALER_PATH = "models/scaler.pkl"
-COLUMNS_PATH = "models/model_columns.pkl"
+
+current_path = os.getcwd()
+print("CURRENT PATH:", current_path)
+
+MODEL_PATH = os.path.join(current_path, "models", "nn_model.keras")
+SCALER_PATH = os.path.join(current_path, "models", "scaler.pkl")
+COLUMNS_PATH = os.path.join(current_path, "models", "model_columns.pkl")
 
 # Load trained model and preprocessing tools
 model = load_model(MODEL_PATH, custom_objects={"real_mae": real_mae})
