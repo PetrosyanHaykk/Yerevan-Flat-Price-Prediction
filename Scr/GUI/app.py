@@ -30,7 +30,7 @@ categorical_options = {
 
 # Main Window Setup
 root = tk.Tk()
-root.title("🏢 Apartment Price Prediction")  # Window title
+root.title("Apartment Price Prediction")  # Window title
 root.geometry("500x750")                    # Window size
 root.resizable(False, False)                # Prevent resizing
 
