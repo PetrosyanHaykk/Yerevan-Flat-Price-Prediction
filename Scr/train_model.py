@@ -106,9 +106,10 @@ model = Sequential([
     Dense(1)
 ])
 
+# Compile with MSE loss
 model.compile(
     optimizer=AdamW(learning_rate=lr_schedule, weight_decay=1e-5),
-    loss=tf.keras.losses.Huber(delta=1.0),
+    loss='mean_squared_error',
     metrics=[real_mae]
 )
 
