@@ -4,6 +4,7 @@ import random
 import joblib
 import numpy as np
 import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
 
 import tensorflow as tf
@@ -31,7 +32,6 @@ current_path = os.getcwd()
 print("CURRENT PATH:", current_path)
 
 csv_path = os.path.join(current_path, "Data", "processed", "processed_df.csv")
-
 df = pd.read_csv(csv_path)
 print(f"Data loaded from: {csv_path}")
 
@@ -46,7 +46,7 @@ df = pd.get_dummies(df, columns=columns_to_binary, drop_first=True)
 df_shuffled = shuffle(df, random_state=42).reset_index(drop=True)
 X = df_shuffled.drop("Price", axis=1)
 y = df_shuffled["Price"].values
-y_log = np.log1p(y)  # log transform of target
+y_log = np.log1p(y)
 
 X_train, X_test, y_train, y_test = train_test_split(X, y_log, test_size=0.15, random_state=42)
 
@@ -57,11 +57,10 @@ numeric_columns = ['Number of Floors', 'Total Area', 'Number of Rooms',
 scaler = StandardScaler()
 X_train_scaled = X_train.copy()
 X_test_scaled = X_test.copy()
-
 X_train_scaled[numeric_columns] = scaler.fit_transform(X_train[numeric_columns])
 X_test_scaled[numeric_columns] = scaler.transform(X_test[numeric_columns])
 
-# Custom metric for real MAE
+# Custom metric
 def real_mae(y_true, y_pred):
     y_true_exp = tf.math.expm1(y_true)
     y_pred_exp = tf.math.expm1(y_pred)
@@ -83,17 +82,17 @@ model = Sequential([
     BatchNormalization(),
     PReLU(),
     Dropout(0.4),
-
+    
     Dense(256, kernel_regularizer=tf.keras.regularizers.l2(1e-4)),
     BatchNormalization(),
     PReLU(),
     Dropout(0.3),
-
+    
     Dense(256, kernel_regularizer=tf.keras.regularizers.l2(1e-4)),
     BatchNormalization(),
     PReLU(),
     Dropout(0.3),
-
+    
     Dense(128, kernel_regularizer=tf.keras.regularizers.l2(1e-4)),
     BatchNormalization(),
     PReLU(),
@@ -102,11 +101,10 @@ model = Sequential([
     Dense(32, kernel_regularizer=tf.keras.regularizers.l2(1e-4)),
     BatchNormalization(),
     PReLU(),
-
+    
     Dense(1)
 ])
 
-# Compile with MSE loss
 model.compile(
     optimizer=AdamW(learning_rate=lr_schedule, weight_decay=1e-5),
     loss='mean_squared_error',
@@ -144,7 +142,10 @@ print(f"Test MAE: {mae:.2f}")
 print(f"Test RMSE: {rmse:.2f}")
 print(f"Test R² Score: {r2:.3f}")
 
-# Plot MAE During Training
+# Create output folder
+os.makedirs("models", exist_ok=True)
+
+# Plot MAE During Training and save
 plt.figure(figsize=(8, 5))
 plt.plot(history.history['real_mae'], label='Train MAE (Real Prices)', linewidth=2)
 plt.plot(history.history['val_real_mae'], label='Val MAE (Real Prices)', linewidth=2)
@@ -153,27 +154,40 @@ plt.xlabel('Epochs', fontsize=12)
 plt.ylabel('MAE (Real Prices)', fontsize=12)
 plt.legend()
 plt.grid(True, linestyle='--', alpha=0.7)
+plt.tight_layout()
+plt.savefig("models/mae_training.png", dpi=300)
 plt.show()
 
-# Plot Real vs Predicted Prices
+# Plot Real vs Predicted Prices and save
 plt.figure(figsize=(8, 6))
 plt.scatter(y_test_real, y_pred, color="purple", alpha=0.6, edgecolor="k")
-plt.plot(
-    [y_test_real.min(), y_test_real.max()],
-    [y_test_real.min(), y_test_real.max()],
-    color="red", linestyle="--", linewidth=2
-)
+plt.plot([y_test_real.min(), y_test_real.max()],
+         [y_test_real.min(), y_test_real.max()],
+         color="red", linestyle="--", linewidth=2)
 plt.title("Real vs Predicted Prices", fontsize=16, fontweight='bold')
 plt.xlabel("Real Price (USD)", fontsize=12)
 plt.ylabel("Predicted Price (USD)", fontsize=12)
 plt.grid(True, linestyle='--', alpha=0.5)
 plt.tight_layout()
+plt.savefig("models/real_vs_predicted.png", dpi=300)
+plt.show()
+
+# Plot Residuals Distribution and save
+residuals = y_test_real - y_pred
+
+plt.figure(figsize=(10, 6))
+sns.histplot(residuals, bins=60, kde=True, color='purple', alpha=0.3)
+plt.title("Residuals Distribution (Actual Price - Predicted Price)", fontsize=15, fontweight='bold')
+plt.xlabel("Residual (USD)", fontsize=12)
+plt.ylabel("Frequency", fontsize=12)
+plt.grid(True, linestyle='--', alpha=0.6)
+plt.tight_layout()
+plt.savefig("models/residuals_distribution.png", dpi=300)
 plt.show()
 
 # Save Model and Preprocessing Artifacts
-os.makedirs("models", exist_ok=True)
 model.save("models/nn_model.keras", include_optimizer=False)
 joblib.dump(scaler, "models/scaler.pkl")
 joblib.dump(list(df_shuffled.drop("Price", axis=1).columns), "models/model_columns.pkl")
 
-print("Model, scaler, and feature columns saved in 'models/' folder.")
+print("Model, scaler, feature columns, and plots saved in 'models/' folder.")
